@@ -2,24 +2,68 @@
 @model THelp_Web.Pages.LoginModel
 @{
     ViewData["Title"] = "Login";
+    ViewData["IsAuthenticated"] = false;
 }
 
-<div class="d-flex justify-content-center align-items-center vh-100">
-    <div class="card p-4 shadow-sm" style="width: 350px;">
-        <h3 class="text-center mb-3">Login</h3>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h4><i class="fas fa-sign-in-alt me-2"></i>Login to THelp</h4>
+                    <p class="mb-0">Access your support dashboard</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username or Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="username" name="Username"
+                                       placeholder="Enter your username" required>
+                            </div>
+                        </div>
 
-        <form method="post">
-            <div class="mb-3">
-                <label asp-for="Username" class="form-label">Username</label>
-                <input asp-for="Username" class="form-control" />
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="Password"
+                                       placeholder="Enter your password" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="RememberMe">
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
+                            <a href="#" class="float-end text-decoration-none">Forgot password?</a>
+                        </div>
+
+                        <!-- In a real application, you would handle authentication here -->
+                        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>@Model.ErrorMessage
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+
+                        <div class="text-center">
+                            <span class="text-muted">Don't have an account? </span>
+                            <a href="/Register" class="text-decoration-none">Register here</a>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label">Password</label>
-                <input asp-for="Password" type="password" class="form-control" />
+            <div class="text-center mt-4">
+                <a href="/Welcome" class="text-decoration-none">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Welcome Page
+                </a>
             </div>
-
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
+        </div>
     </div>
 </div>

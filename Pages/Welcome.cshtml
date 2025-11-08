@@ -1,0 +1,90 @@
+﻿@page
+@model THelp_Web.Pages.WelcomeModel
+@{
+    ViewData["Title"] = "Welcome to THelp";
+    ViewData["IsAuthenticated"] = false; // This would come from your auth service
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <!-- Hero Section -->
+            <div class="hero-section mb-5">
+                <h1 class="display-4 text-primary mb-4">Welcome to THelp</h1>
+                <p class="lead mb-4">Your comprehensive technical support and helpdesk solution</p>
+                <div class="row mt-5">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-headset fa-3x text-primary mb-3"></i>
+                                <h5>24/7 Support</h5>
+                                <p class="text-muted">Round-the-clock technical assistance</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-bolt fa-3x text-success mb-3"></i>
+                                <h5>Fast Response</h5>
+                                <p class="text-muted">Quick solutions to your technical issues</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-shield-alt fa-3x text-warning mb-3"></i>
+                                <h5>Secure</h5>
+                                <p class="text-muted">Your data and privacy are protected</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons mt-5">
+                <h3 class="mb-4">Get Started Today</h3>
+                <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                    <a href="/Login" class="btn btn-primary btn-lg px-5 me-md-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="/Register" class="btn btn-outline-primary btn-lg px-5">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                </div>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="row mt-5 pt-5">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-rocket me-2 text-primary"></i>Easy to Use</h5>
+                    <p class="text-muted">Intuitive interface designed for both technical and non-technical users.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5><i class="fas fa-chart-line me-2 text-success"></i>Track Progress</h5>
+                    <p class="text-muted">Monitor your support tickets and resolutions in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hero-section {
+        padding: 3rem 0;
+    }
+
+    .card {
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .action-buttons .btn {
+        min-width: 180px;
+    }
+</style>
