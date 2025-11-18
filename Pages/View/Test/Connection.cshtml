@@ -1,0 +1,234 @@
+﻿@page
+@model THelp_Web.Pages.View.Test.ConnectionModel
+@{
+}
+
+<div class="container mt-4">
+    <h2>Teste de Conexão com a API</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Status da API</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>URL Base:</strong>
+                        <code>@Model.ApiStatus.BaseUrl</code>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        <span class="badge @(Model.ConnectionResult.IsSuccess ? "bg-success" : "bg-danger")">
+                            @(Model.ConnectionResult.IsSuccess ? "ONLINE" : "OFFLINE")
+                        </span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Última Verificação:</strong>
+                        @Model.ApiStatus.LastChecked.ToString("dd/MM/yyyy HH:mm:ss")
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Tempo de Resposta:</strong>
+                        @if (Model.ConnectionResult.ResponseTimeMs >= 0)
+                        {
+                            <span class="text-success">@Model.ConnectionResult.ResponseTimeMs ms</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">N/A</span>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Mensagem:</strong>
+                        <span class="@(Model.ConnectionResult.IsSuccess ? "text-success" : "text-danger")">
+                            @Model.ConnectionResult.Message
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Ações</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button id="testBtn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Testar Conexão
+                        </button>
+
+                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#urlModal">
+                            <i class="fas fa-link"></i> Testar URL Personalizada
+                        </button>
+
+                        <a href="/" class="btn btn-secondary">
+                            <i class="fas fa-home"></i> Voltar para Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status em tempo real -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Status em Tempo Real</h6>
+                </div>
+                <div class="card-body">
+                    <div id="liveStatus" class="text-center">
+                        <div class="spinner-border text-primary" role="status" id="loadingSpinner" style="display: none;">
+                            <span class="visually-hidden">Testando...</span>
+                        </div>
+                        <div id="statusResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para testar URL personalizada -->
+<div class="modal fade" id="urlModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Testar URL Personalizada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="customUrl" class="form-label">URL para Testar</label>
+                    <input type="text" class="form-control" id="customUrl"
+                           placeholder="https://api.exemplo.com/health"
+                           value="@Model.ApiStatus.BaseUrl/api/health">
+                </div>
+                <div id="urlTestResult"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="testUrlBtn">Testar URL</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Teste de conexão padrão
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            const statusResult = document.getElementById('statusResult');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            // Mostrar loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Testando...';
+            statusResult.innerHTML = '';
+            loadingSpinner.style.display = 'block';
+
+            try {
+                const response = await fetch('?handler=CheckStatus', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    statusResult.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> ${result.message}
+                            <br><small>Tempo de resposta: ${result.status.lastChecked}</small>
+                        </div>
+                    `;
+                    // Recarregar a página após 2 segundos para atualizar todos os dados
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    statusResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle"></i> ${result.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                statusResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Erro ao testar conexão: ${error.message}
+                    </div>
+                `;
+            } finally {
+                loadingSpinner.style.display = 'none';
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
+        // Teste de URL personalizada
+        document.getElementById('testUrlBtn').addEventListener('click', async function() {
+            const btn = this;
+            const url = document.getElementById('customUrl').value;
+            const resultDiv = document.getElementById('urlTestResult');
+            const originalText = btn.innerHTML;
+
+            if (!url) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Por favor, informe uma URL</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Testando...';
+            resultDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary"></div></div>';
+
+            try {
+                const response = await fetch('?handler=TestUrl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify(url)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Conexão bem-sucedida!
+                            <br><small>Status: ${result.statusCode} - ${result.message}</small>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle"></i> ${result.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Erro: ${error.message}
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
+        // Auto-focus no modal
+        document.getElementById('urlModal').addEventListener('shown.bs.modal', function () {
+            document.getElementById('customUrl').focus();
+        });
+    </script>
+}
