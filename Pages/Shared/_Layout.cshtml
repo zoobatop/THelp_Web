@@ -1,129 +1,85 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Mvc.RazorPages
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - THelp</title>
-    <script type="importmap"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/THelp_Web.styles.css" asp-append-version="true" />
-    <!-- Add Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/_Layout.css" /> @* vamos criar esse *@
+
+    @RenderSection("Styles", required: false)
 </head>
 <body>
-    <!-- Different header based on whether user is authenticated -->
-    @if (ViewData["IsAuthenticated"] as bool? == true)
-    {
-        <!-- Dashboard Layout with Sidebar -->
+    <header class="topbar navbar navbar-dark bg-primary">
         <div class="container-fluid">
-            <div class="row">
-                <!-- Sidebar -->
-                <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
-                    <div class="position-sticky pt-3">
-                        <div class="sidebar-header text-center py-4">
-                            <h4 class="text-white">THelp</h4>
-                        </div>
-                        <ul class="nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link text-white active" asp-page="/Index">
-                                    <i class="fas fa-tachometer-alt me-2"></i>
-                                    Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="#">
-                                    <i class="fas fa-question-circle me-2"></i>
-                                    Support Tickets
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="#">
-                                    <i class="fas fa-book me-2"></i>
-                                    Knowledge Base
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="#">
-                                    <i class="fas fa-users me-2"></i>
-                                    Users
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="#">
-                                    <i class="fas fa-cog me-2"></i>
-                                    Settings
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </nav>
+            <button class="btn btn-outline-light d-md-none me-2" id="sidebarToggle">
+                ☰
+            </button>
 
-                <!-- Main content -->
-                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                    <!-- Top navbar for dashboard -->
-                    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                        <div class="container-fluid">
-                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar">
-                                <span class="navbar-toggler-icon"></span>
-                            </button>
-                            <div class="d-flex">
-                                <span class="navbar-text me-3">
-                                    Welcome, User!
-                                </span>
-                                <a class="btn btn-outline-danger btn-sm" href="/Welcome">
-                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
-                                </a>
-                            </div>
-                        </div>
-                    </nav>
+            <a class="navbar-brand fw-bold" asp-page="/Index">
+                THelp - Sistema de Chamados
+            </a>
 
-                    <!-- Page content -->
-                    <div class="container-fluid py-4">
-                        @RenderBody()
-                    </div>
-                </main>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">
+                    @* Exemplo, depois você pode colocar o usuário logado *@
+                    Olá, Usuário
+                </span>
+                <a class="btn btn-outline-light btn-sm" asp-page="/Login">Sair</a>
             </div>
         </div>
-    }
-    else
-    {
-        <!-- Public Layout (Welcome/Login pages) -->
-        <header>
-            <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-                <div class="container">
-                    <a class="navbar-brand" asp-page="/Welcome">THelp</a>
-                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                        <ul class="navbar-nav flex-grow-1">
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Welcome">Home</a>
-                            </li>
-                        </ul>
-                        <div class="navbar-nav">
-                            <a class="nav-link text-dark" asp-page="/Login">Login</a>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </header>
+    </header>
 
-        <div class="container">
-            <main role="main" class="pb-3">
+    <div class="app-container d-flex">
+        <nav id="sidebar" class="sidebar bg-dark text-white">
+            <div class="sidebar-header p-3 border-bottom border-secondary">
+                <h5 class="mb-0">Menu</h5>
+            </div>
+
+            <ul class="nav flex-column p-2">
+                <li class="nav-item">
+                    <a class="nav-link text-white" asp-page="/Index">
+                        🏠 Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" asp-page="/Welcome">
+                        👋 Tela de Boas-vindas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" asp-page="/Test/Connection">
+                        🧪 Testar API
+                    </a>
+                </li>
+
+                @* Depois você adiciona outras páginas do sistema de chamados aqui *@
+                <li class="nav-item mt-3">
+                    <span class="text-secondary small px-3 text-uppercase">Chamados</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50 disabled" href="#">
+                        (exemplo) Meus Chamados
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content flex-grow-1">
+            <div class="container-fluid py-4">
                 @RenderBody()
-            </main>
-        </div>
-
-        <footer class="border-top footer text-muted">
-            <div class="container">
-                &copy; 2025 - THelp - <a asp-page="/Privacy">Privacy</a>
             </div>
-        </footer>
-    }
+        </main>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/site.js"></script>
 
-    @await RenderSectionAsync("Scripts", required: false)
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

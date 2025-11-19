@@ -11,6 +11,8 @@ namespace THelp_Web
             // Registrar o ApiService
             builder.Services.AddHttpClient<ApiService>();
 
+            builder.Services.AddHttpContextAccessor();
+
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
@@ -35,9 +37,6 @@ namespace THelp_Web
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
-
-            // Rota customizada opcional
-            app.MapGet("/teste-conexao", () => Results.Redirect("/Test/Connection"));
 
             app.Run();
         }

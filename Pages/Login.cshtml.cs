@@ -1,74 +1,67 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace THelp_Web.Pages
 {
     public class LoginModel : PageModel
     {
-        [BindProperty]
-        [Required]
-        public string Username { get; set; } = string.Empty;
+        private readonly ILogger<LoginModel> _logger;
+
+        public LoginModel(ILogger<LoginModel> logger)
+        {
+            _logger = logger;
+        }
 
         [BindProperty]
-        [Required]
-        public string Password { get; set; } = string.Empty;
+        public InputModel Input { get; set; } = new();
 
-        [BindProperty]
-        public bool RememberMe { get; set; }
+        public string? ErrorMessage { get; set; }
 
-        public string ErrorMessage { get; set; } = string.Empty;
+        public class InputModel
+        {
+            [Required(ErrorMessage = "O e-mail é obrigatório")]
+            [EmailAddress(ErrorMessage = "E-mail inválido")]
+            [Display(Name = "E-mail")]
+            public string Email { get; set; } = string.Empty;
+
+            [Required(ErrorMessage = "A senha é obrigatória")]
+            [DataType(DataType.Password)]
+            [Display(Name = "Senha")]
+            public string Password { get; set; } = string.Empty;
+
+            [Display(Name = "Lembrar-me")]
+            public bool RememberMe { get; set; }
+        }
 
         public void OnGet()
         {
+            // Se precisar limpar sessão/cookies de login, pode fazer aqui
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public IActionResult OnPost()
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            // Simple authentication - replace with your actual authentication logic
-            if (AuthenticateUser(Username, Password))
+            // TODO: Validar usuário em banco/serviço aqui
+            // Exemplo fictício:
+            if (Input.Email == "admin@teste.com" && Input.Password == "123456")
             {
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, Username),
-                    new Claim(ClaimTypes.Role, "User") // Add appropriate roles
-                };
+                _logger.LogInformation("Usuário logado com sucesso: {Email}", Input.Email);
 
-                var claimsIdentity = new ClaimsIdentity(
-                    claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = RememberMe,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
-                };
-
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    authProperties);
-
+                // Aqui você deveria criar o cookie de autenticação ou algo similar
+                // Por enquanto, só redireciono para o dashboard
                 return RedirectToPage("/Index");
             }
 
-            ErrorMessage = "Invalid username or password";
-            return Page();
-        }
+            ErrorMessage = "E-mail ou senha inválidos.";
+            _logger.LogWarning("Tentativa de login falhou: {Email}", Input.Email);
 
-        private bool AuthenticateUser(string username, string password)
-        {
-            // Replace this with your actual authentication logic
-            // This is a simple example - in production, use a proper user store
-            return (username == "admin" && password == "password") ||
-                   (username == "user" && password == "password");
+            return Page();
         }
     }
 }
