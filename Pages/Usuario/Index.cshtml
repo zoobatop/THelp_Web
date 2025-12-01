@@ -1,0 +1,184 @@
+﻿@page
+@model THelp_Web.Pages.Usuario.IndexModel
+@{
+    ViewData["Title"] = "Gerenciar Usuários";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#usuarioModal">
+            <i class="fas fa-plus"></i> Novo Usuário
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Mensagem))
+    {
+        <div class="alert alert-@(Model.TipoMensagem == "success" ? "success" : "danger") alert-dismissible fade show" role="alert">
+            @Model.Mensagem
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Tabela -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Papel</th>
+                            <th>Ativo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var usuario in Model.Usuarios)
+                        {
+                            <tr>
+                                <td>@usuario.IdUsuario</td>
+                                <td>@usuario.UsuNome</td>
+                                <td>@usuario.UsuEmail</td>
+                                <td>@usuario.IdPapel</td>
+                                <td>
+                                    <span class="badge bg-@(usuario.UsuAtivo ? "success" : "danger")">
+                                        @(usuario.UsuAtivo ? "Sim" : "Não")
+                                    </span>
+                                </td>
+                                <td>
+                                    <form method="get" class="d-inline">
+                                        <button type="submit" asp-page-handler="Edit" asp-route-id="@usuario.IdUsuario" 
+                                                class="btn btn-sm btn-warning" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" class="d-inline" 
+                                          onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
+                                        <button type="submit" asp-page-handler="Delete" asp-route-id="@usuario.IdUsuario"
+                                                class="btn btn-sm btn-danger" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="usuarioModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Model.UsuarioEditId == 0 ? "Novo Usuário" : "Editar Usuário")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                <input type="hidden" asp-for="UsuarioEditId" />
+                
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="UsuarioInput.Nome" class="form-label">Nome *</label>
+                                <input asp-for="UsuarioInput.Nome" class="form-control" />
+                                <span asp-validation-for="UsuarioInput.Nome" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="UsuarioInput.Email" class="form-label">Email *</label>
+                                <input asp-for="UsuarioInput.Email" type="email" class="form-control" />
+                                <span asp-validation-for="UsuarioInput.Email" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="UsuarioInput.Senha" class="form-label">
+                                    Senha * @(Model.UsuarioEditId > 0 ? "(deixe em branco para manter a atual)" : "")
+                                </label>
+                                @if (Model.UsuarioEditId > 0)
+                                {
+                                    <input asp-for="UsuarioInput.Senha" type="password" class="form-control" />
+                                }
+                                else
+                                {
+                                    <input asp-for="UsuarioInput.Senha" type="password" class="form-control" required />
+                                }
+                                <span asp-validation-for="UsuarioInput.Senha" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="UsuarioInput.IdPapel" class="form-label">Papel *</label>
+                                <input asp-for="UsuarioInput.IdPapel" type="number" class="form-control" />
+                                <span asp-validation-for="UsuarioInput.IdPapel" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="UsuarioInput.IdOrganizacao" class="form-label">Organização</label>
+                                <input asp-for="UsuarioInput.IdOrganizacao" type="number" class="form-control" />
+                                <span asp-validation-for="UsuarioInput.IdOrganizacao" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check pt-4">
+                                <input asp-for="UsuarioInput.Ativo" class="form-check-input" />
+                                <label asp-for="UsuarioInput.Ativo" class="form-check-label">Usuário Ativo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (Model.UsuarioEditId > 0)
+                    {
+                        <a asp-page-handler="CancelEdit" class="btn btn-secondary">Cancelar</a>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    }
+                    <button type="submit" asp-page-handler="@(Model.UsuarioEditId == 0 ? "Create" : "Update")" 
+                            class="btn btn-primary">
+                        @(Model.UsuarioEditId == 0 ? "Criar" : "Atualizar")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        @if (Model.UsuarioEditId > 0)
+        {
+            <text>
+            $(document).ready(function() {
+                $('#usuarioModal').modal('show');
+            });
+            </text>
+        }
+
+        $('#usuarioModal').on('hidden.bs.modal', function () {
+            if (@Model.UsuarioEditId > 0) {
+                window.location.href = window.location.pathname;
+            }
+        });
+    </script>
+}
