@@ -1,0 +1,71 @@
+@page
+@model THelp_Web.Pages.Chamado.CriarModel
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h3 class="text-center mb-0">
+                    <i class="fas fa-plus-circle"></i> Abrir Novo Chamado
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Chamado.Titulo" class="form-label"></label>
+                        <input asp-for="Chamado.Titulo" class="form-control" placeholder="Digite um título para o chamado" />
+                        <span asp-validation-for="Chamado.Titulo" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Chamado.Descricao" class="form-label"></label>
+                        <textarea asp-for="Chamado.Descricao" class="form-control" rows="5" 
+                                  placeholder="Descreva detalhadamente o problema..."></textarea>
+                        <span asp-validation-for="Chamado.Descricao" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Chamado.Categoria" class="form-label"></label>
+                            <select asp-for="Chamado.Categoria" class="form-select">
+                                <option value="">Selecione uma categoria</option>
+                                <option value="Hardware">Hardware</option>
+                                <option value="Software">Software</option>
+                                <option value="Rede">Rede</option>
+                                <option value="Email">E-mail</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                            <span asp-validation-for="Chamado.Categoria" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Chamado.Prioridade" class="form-label"></label>
+                            <select asp-for="Chamado.Prioridade" class="form-select">
+                                <option value="Baixa">Baixa</option>
+                                <option value="Media" selected>Média</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Urgente">Urgente</option>
+                            </select>
+                            <span asp-validation-for="Chamado.Prioridade" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-page="Index" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Abrir Chamado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,6 +1,6 @@
 using THelp_Web.Config;
-using THelp_Web.Interface;
 using THelp_Web.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace THelp_Web
 {
@@ -12,48 +12,64 @@ namespace THelp_Web
 
             Env.Initialize(builder.Configuration);
 
-            // Add services to the container.
-            builder.Services.AddRazorPages();
-
-            // Configura��o do HttpClient (agora simplificada)
-            builder.Services.AddHttpClient("ApiService", client =>
+            // Configuração do HttpClient para a API
+            builder.Services.AddHttpClient("ApiClient", client =>
             {
-                client.BaseAddress = new Uri(Env.ApiBaseUrl);
+                client.BaseAddress = new Uri("http://localhost:8080/api/");
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
             });
 
-            builder.Services.AddScoped<IOrganizacaoService, OrganizacaoService>();
+            // Configuração de Session
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromHours(8);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            });
 
-            builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+            // Registra os serviços
+            builder.Services.AddScoped<AuthService>();
+            // Se ainda precisar do ApiService, mantenha essa linha
+            // builder.Services.AddScoped<ApiService>();
+            builder.Services.AddScoped<ChamadoService>();
 
-            builder.Services.AddScoped<IPapelService, PapelService>();
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Login";
+                    options.LogoutPath = "/Logout";
+                    options.AccessDeniedPath = "/AccessDenied";
+                    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                    options.SlidingExpiration = true;
+                });
 
+            builder.Services.AddAuthorization();
             builder.Services.AddHttpContextAccessor();
-
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
-
-            // Add services to the container.
+            builder.Services.AddControllersWithViews(); // Se for usar MVC
             builder.Services.AddRazorPages();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
+                app.UseHsts();
             }
 
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
             app.UseRouting();
 
+            // IMPORTANTE: UseSession deve vir antes de UseAuthentication
+            app.UseSession();
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapStaticAssets();
-            app.MapRazorPages()
-               .WithStaticAssets();
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+            app.MapRazorPages();
+            app.MapControllers();
 
             app.Run();
         }

@@ -25,10 +25,5 @@ namespace THelp_Web.Models.Domain
         [JsonPropertyName("id_organizacao")]
         public int? IdOrganizacao { get; set; }
 
-        [JsonPropertyName("papel")]
-        public Papel? Papel { get; set; }
-
-        [JsonPropertyName("organizacao")]
-        public Organizacao? Organizacao { get; set; }
     }
 }

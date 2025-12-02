@@ -1,70 +1,133 @@
-using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using THelp_Web.Services;
 
 namespace THelp_Web.Pages
 {
     public class RegisterModel : PageModel
     {
+        private readonly AuthService _authService;
         private readonly ILogger<RegisterModel> _logger;
 
-        public RegisterModel(ILogger<RegisterModel> logger)
+        [BindProperty]
+        public InputModel Input { get; set; }
+
+        public RegisterModel(AuthService authService, ILogger<RegisterModel> logger)
         {
+            _authService = authService;
             _logger = logger;
         }
 
-        [BindProperty]
-        public InputModel Input { get; set; } = new();
-
-        public string? SuccessMessage { get; set; }
-        public string? ErrorMessage { get; set; }
-
         public class InputModel
         {
-            [Required(ErrorMessage = "O nome È obrigatÛrio")]
-            [Display(Name = "Nome completo")]
-            public string Name { get; set; } = string.Empty;
+            [Required(ErrorMessage = "O nome √© obrigat√≥rio")]
+            [Display(Name = "Nome Completo")]
+            [StringLength(100, MinimumLength = 3, ErrorMessage = "O nome deve ter entre 3 e 100 caracteres")]
+            public string Nome { get; set; } = string.Empty;
 
-            [Required(ErrorMessage = "O e-mail È obrigatÛrio")]
-            [EmailAddress(ErrorMessage = "E-mail inv·lido")]
+            [Required(ErrorMessage = "O e-mail √© obrigat√≥rio")]
+            [EmailAddress(ErrorMessage = "Digite um e-mail v√°lido")]
             [Display(Name = "E-mail")]
             public string Email { get; set; } = string.Empty;
 
-            [Required(ErrorMessage = "A senha È obrigatÛria")]
+            [Required(ErrorMessage = "A senha √© obrigat√≥ria")]
             [DataType(DataType.Password)]
-            [MinLength(6, ErrorMessage = "A senha deve ter no mÌnimo 6 caracteres")]
             [Display(Name = "Senha")]
-            public string Password { get; set; } = string.Empty;
+            [StringLength(100, MinimumLength = 6, ErrorMessage = "A senha deve ter no m√≠nimo 6 caracteres")]
+            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$",
+                ErrorMessage = "A senha deve conter pelo menos uma letra mai√∫scula, uma min√∫scula, um n√∫mero e um caractere especial")]
+            public string Senha { get; set; } = string.Empty;
 
-            [Required(ErrorMessage = "A confirmaÁ„o de senha È obrigatÛria")]
+            [Required(ErrorMessage = "A confirma√ß√£o de senha √© obrigat√≥ria")]
             [DataType(DataType.Password)]
-            [Display(Name = "Confirmar senha")]
-            [Compare("Password", ErrorMessage = "As senhas n„o conferem")]
-            public string ConfirmPassword { get; set; } = string.Empty;
+            [Display(Name = "Confirmar Senha")]
+            [Compare("Senha", ErrorMessage = "As senhas n√£o coincidem")]
+            public string ConfirmarSenha { get; set; } = string.Empty;
+
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            if (_authService.IsAuthenticated())
+            {
+                return RedirectToPage("/Chamado/Index");
+            }
+            return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
-            {
                 return Page();
+
+            _logger.LogInformation("Tentativa de registro para: {Email}", Input.Email);
+
+            // Usa o AuthService para fazer registro na API
+            var apiResponse = await _authService.RegisterAsync(
+                Input.Nome,
+                Input.Email,
+                Input.Senha,
+                Input.ConfirmarSenha);
+
+            if (apiResponse?.Success == true && apiResponse.Data?.Sucesso == true)
+            {
+                var registerData = apiResponse.Data;
+                var usuario = registerData.Usuario;
+
+                _logger.LogInformation("Registro bem-sucedido para: {Nome}", usuario?.Nome);
+
+                // Se o registro inclui login autom√°tico (com token), cria as claims
+                if (!string.IsNullOrEmpty(registerData.Token) && usuario != null)
+                {
+                    // Cria as claims do usu√°rio
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                        new Claim(ClaimTypes.Name, usuario.Nome ?? Input.Nome),
+                        new Claim(ClaimTypes.Email, Input.Email),
+                        new Claim("PapelId", usuario.IdPapel.ToString()),
+                        new Claim("OrganizacaoId", usuario.IdOrganizacao.ToString()),
+                        new Claim("JwtToken", registerData.Token)
+                    };
+
+                    // Adiciona role baseada no papel
+                    claims.Add(new Claim(ClaimTypes.Role, "Usuario"));
+
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    var authProperties = new AuthenticationProperties
+                    {
+                        IsPersistent = true,
+                        ExpiresUtc = DateTimeOffset.FromUnixTimeMilliseconds(registerData.ExpiraEm),
+                        IssuedUtc = DateTimeOffset.UtcNow
+                    };
+
+                    await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity),
+                        authProperties);
+
+                    TempData["SuccessMessage"] = "Conta criada com sucesso! Voc√™ est√° logado.";
+                    return RedirectToPage("/Chamado/Index");
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Conta criada com sucesso! Fa√ßa login para continuar.";
+                    return RedirectToPage("/Login");
+                }
             }
 
-            // TODO: salvar usu·rio no banco de dados aqui
-            // Exemplo apenas registrando no log
-            _logger.LogInformation("Novo usu·rio registrado: {Email}", Input.Email);
+            _logger.LogWarning("Registro falhou para: {Email}", Input.Email);
 
-            // Exemplo simples: redireciona para Login depois de registrar
-            // Se quiser ficar na mesma p·gina com mensagem de sucesso:
-            // SuccessMessage = "Usu·rio registrado com sucesso! FaÁa login para continuar.";
-            // return Page();
+            // Usa a mensagem da API ou uma mensagem padr√£o
+            var errorMessage = apiResponse?.Message ?? "Erro ao criar a conta. Verifique os dados e tente novamente.";
+            ModelState.AddModelError(string.Empty, errorMessage);
 
-            return RedirectToPage("/Login");
+            return Page();
         }
     }
 }

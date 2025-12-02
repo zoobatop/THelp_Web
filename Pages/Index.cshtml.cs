@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
@@ -7,23 +8,17 @@ namespace THelp_Web.Pages
     {
         private readonly ILogger<IndexModel> _logger;
 
-        // Exemplo de propriedades para exibir no dashboard
-        public int OpenTickets { get; set; }
-        public int InProgressTickets { get; set; }
-        public int ClosedTodayTickets { get; set; }
-
         public IndexModel(ILogger<IndexModel> logger)
         {
             _logger = logger;
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
-            _logger.LogInformation("Dashboard accessed.");
-
-            OpenTickets = 12;
-            InProgressTickets = 5;
-            ClosedTodayTickets = 3;
+            _logger.LogInformation("Index page accessed. Redirecting to Welcome.");
+            
+            // Redireciona para a página Welcome
+            return RedirectToPage("/Welcome");
         }
     }
 }

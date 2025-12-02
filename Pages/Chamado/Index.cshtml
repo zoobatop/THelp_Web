@@ -1,0 +1,536 @@
+@page
+@model THelp_Web.Pages.Chamado.IndexModel
+@using THelp_Web.Models
+
+@{
+    ViewData["Title"] = "Chamados";
+}
+
+<div class="container-fluid">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.MensagemSucesso))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.MensagemSucesso
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.MensagemErro))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Model.MensagemErro
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-ticket-alt me-2"></i> Chamados
+        </h2>
+
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#criarChamadoModal">
+            <i class="fas fa-plus-circle"></i> Novo Chamado
+        </button>
+    </div>
+
+    <!-- Modal para criar chamado -->
+    <div class="modal fade" id="criarChamadoModal" tabindex="-1" aria-labelledby="criarChamadoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="Create">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="criarChamadoModalLabel">
+                            <i class="fas fa-plus-circle me-2"></i> Novo Chamado
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label asp-for="NovoChamado.ChaTitulo" class="form-label">Título *</label>
+                            <input asp-for="NovoChamado.ChaTitulo" class="form-control" required
+                                   placeholder="Descreva brevemente o problema" />
+                            <span asp-validation-for="NovoChamado.ChaTitulo" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="NovoChamado.ChaDescricao" class="form-label">Descrição *</label>
+                            <textarea asp-for="NovoChamado.ChaDescricao" class="form-control" rows="4" required
+                                      placeholder="Descreva o problema em detalhes..."></textarea>
+                            <span asp-validation-for="NovoChamado.ChaDescricao" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NovoChamado.Prioridade" class="form-label">Prioridade</label>
+                                <select asp-for="NovoChamado.Prioridade" class="form-select">
+                                    <option value="baixa">Baixa</option>
+                                    <option value="media" selected>Média</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="urgente">Urgente</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NovoChamado.Categoria" class="form-label">Categoria</label>
+                                <input asp-for="NovoChamado.Categoria" class="form-control"
+                                       placeholder="Ex: Suporte, Bug, Melhoria" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Criar Chamado</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para atribuir usuário -->
+    <div class="modal fade" id="atribuirUsuarioModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="AtribuirUsuario">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title">Atribuir Usuário</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="chamadoIdParaAtribuir" class="form-label">ID do Chamado</label>
+                            <input type="number" id="chamadoIdParaAtribuir" name="chamadoId" class="form-control" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label for="usuarioIdInput" class="form-label">ID do Usuário *</label>
+                            <input type="number" id="usuarioIdInput" name="usuarioId" class="form-control" required
+                                   placeholder="Digite o ID do usuário" min="1" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Atribuir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label">Status</label>
+                    <select id="statusFilter" class="form-select" onchange="filtrarPorStatus(this.value)">
+                        <option value="">Todos</option>
+                        @foreach (var status in Model.GetStatusPermitidos())
+                        {
+                            <option value="@status">@char.ToUpper(status[0])@status.Substring(1)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="prioridadeFilter" class="form-label">Prioridade</label>
+                    <select id="prioridadeFilter" class="form-select" onchange="filtrarPorPrioridade(this.value)">
+                        <option value="">Todas</option>
+                        <option value="baixa">Baixa</option>
+                        <option value="media">Média</option>
+                        <option value="alta">Alta</option>
+                        <option value="urgente">Urgente</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="searchInput" class="form-label">Buscar</label>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar por título..." onkeyup="filtrarTabela()">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-secondary w-100" onclick="limparFiltros()">
+                        <i class="fas fa-times me-2"></i> Limpar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Abertos</h6>
+                            <h3 class="card-title mb-0" id="contadorAbertos">0</h3>
+                        </div>
+                        <i class="fas fa-folder-open fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Em Andamento</h6>
+                            <h3 class="card-title mb-0" id="contadorAndamento">0</h3>
+                        </div>
+                        <i class="fas fa-spinner fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Resolvidos</h6>
+                            <h3 class="card-title mb-0" id="contadorResolvidos">0</h3>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total</h6>
+                            <h3 class="card-title mb-0" id="contadorTotal">0</h3>
+                        </div>
+                        <i class="fas fa-chart-bar fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Chamados != null && Model.Chamados.Any())
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="chamadosTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Descrição</th>
+                                <th>Status</th>
+                                <th>Prioridade</th>
+                                <th>Data Abertura</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var chamado in Model.Chamados)
+                            {
+                                var status = Model.GetStatus(chamado);
+                                var prioridade = Model.GetPrioridade(chamado);
+                                var dataAbertura = Model.GetDataAbertura(chamado);
+
+                                <tr data-status="@status?.ToLower()" data-prioridade="@prioridade?.ToLower()">
+                                    <td class="fw-bold">#@chamado.Id</td>
+                                    <td>
+                                        <strong>@chamado.ChaTitulo</strong>
+                                        @if (chamado.IdUsuarioAtribuido.HasValue && !string.IsNullOrEmpty(chamado.UsuarioAtribuidoNome))
+                                        {
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-user-check me-1"></i> @chamado.UsuarioAtribuidoNome
+                                            </small>
+                                        }
+                                        else if (chamado.IdUsuarioAtribuido.HasValue)
+                                        {
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-user-check me-1"></i> Atribuído
+                                            </small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(chamado.ChaDescricao) && chamado.ChaDescricao.Length > 50)
+                                        {
+                                            <span title="@chamado.ChaDescricao">@chamado.ChaDescricao.Substring(0, 50)...</span>
+                                        }
+                                        else
+                                        {
+                                            @chamado.ChaDescricao
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @Model.GetStatusBadgeClass(status)">@status</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @Model.GetPriorityBadgeClass(prioridade)">@prioridade</span>
+                                    </td>
+                                    <td>
+                                        @Model.FormatDateTime(dataAbertura)
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            
+                                            <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" title="Ações">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <!-- Atribuir Usuário -->
+                                                <li>
+                                                    <button type="button" class="dropdown-item" onclick="abrirModalAtribuirUsuario(@chamado.Id)">
+                                                        <i class="fas fa-user-plus me-2"></i> Atribuir Usuário
+                                                    </button>
+                                                </li>
+
+                                                <li><hr class="dropdown-divider"></li>
+
+                                                <!-- Atualizar Status -->
+                                                @foreach (var statusOption in Model.GetStatusPermitidos())
+                                                {
+                                                    if (statusOption != status?.ToLower())
+                                                    {
+                                                        <li>
+                                                            <form method="post" asp-page-handler="AtualizarStatus" class="d-inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="id" value="@chamado.Id" />
+                                                                <input type="hidden" name="status" value="@statusOption" />
+                                                                <button type="submit" class="dropdown-item"
+                                                                        onclick="return confirm('Deseja alterar o status para @statusOption?')">
+                                                                    <i class="fas fa-sync-alt me-2"></i> Alterar para @statusOption
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    }
+                                                }
+                                            </ul>
+
+                                            <!-- Excluir -->
+                                            <form method="post" asp-page-handler="Delete" class="d-inline"
+                                                  onsubmit="return confirm('Tem certeza que deseja excluir este chamado?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@chamado.Id" />
+                                                <button type="submit" class="btn btn-outline-danger" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                @if (Model.Chamados.Count > 10)
+                {
+                    <nav aria-label="Navegação de páginas">
+                        <ul class="pagination justify-content-center mt-4">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Próxima</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-inbox fa-4x text-muted"></i>
+            </div>
+            <h3 class="text-muted mb-3">Nenhum chamado encontrado</h3>
+            <p class="text-muted mb-4">Você não possui chamados ou não há chamados que correspondam aos filtros aplicados.</p>
+            <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#criarChamadoModal">
+                <i class="fas fa-plus-circle me-2"></i> Criar Primeiro Chamado
+            </button>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Função para abrir modal de atribuição
+        function abrirModalAtribuirUsuario(chamadoId) {
+            document.getElementById('chamadoIdParaAtribuir').value = chamadoId;
+            document.getElementById('usuarioIdInput').value = '';
+            var modal = new bootstrap.Modal(document.getElementById('atribuirUsuarioModal'));
+            modal.show();
+        }
+
+        // Inicializa os contadores
+        function atualizarContadores() {
+            const rows = document.querySelectorAll('#chamadosTable tbody tr');
+            let abertos = 0;
+            let andamento = 0;
+            let resolvidos = 0;
+            let totalVisiveis = 0;
+
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    totalVisiveis++;
+                    const status = row.getAttribute('data-status');
+                    switch(status) {
+                        case 'aberto':
+                            abertos++;
+                            break;
+                        case 'em_andamento':
+                            andamento++;
+                            break;
+                        case 'resolvido':
+                            resolvidos++;
+                            break;
+                    }
+                }
+            });
+
+            document.getElementById('contadorAbertos').textContent = abertos;
+            document.getElementById('contadorAndamento').textContent = andamento;
+            document.getElementById('contadorResolvidos').textContent = resolvidos;
+            document.getElementById('contadorTotal').textContent = totalVisiveis;
+        }
+
+        // Filtros
+        function filtrarPorStatus(status) {
+            const rows = document.querySelectorAll('#chamadosTable tbody tr');
+            rows.forEach(row => {
+                if (!status || row.getAttribute('data-status') === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            atualizarContadores();
+        }
+
+        function filtrarPorPrioridade(prioridade) {
+            const rows = document.querySelectorAll('#chamadosTable tbody tr');
+            rows.forEach(row => {
+                if (!prioridade || row.getAttribute('data-prioridade') === prioridade) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            atualizarContadores();
+        }
+
+        function filtrarTabela() {
+            const searchInput = document.getElementById('searchInput');
+            const filter = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('#chamadosTable tbody tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            atualizarContadores();
+        }
+
+        function limparFiltros() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('prioridadeFilter').value = '';
+            document.getElementById('searchInput').value = '';
+
+            const rows = document.querySelectorAll('#chamadosTable tbody tr');
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+            atualizarContadores();
+        }
+
+        // Adicionar confirmação para todas as ações
+        document.addEventListener('DOMContentLoaded', function() {
+            atualizarContadores();
+
+            // Configurar filtros iniciais
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusParam = urlParams.get('status');
+            if (statusParam) {
+                document.getElementById('statusFilter').value = statusParam;
+                filtrarPorStatus(statusParam);
+            }
+        });
+
+        // Auto-refresh opcional (descomente se quiser)
+        // setInterval(() => {
+        //     location.reload();
+        // }, 30000);
+    </script>
+
+    <style>
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .table-hover tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .badge {
+            font-size: 0.85em;
+            padding: 0.4em 0.8em;
+        }
+
+        .btn-group-sm > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: box-shadow 0.3s ease;
+        }
+
+            .card:hover {
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            }
+
+        .modal-backdrop {
+            z-index: 1040;
+        }
+
+        .modal {
+            z-index: 1050;
+        }
+
+        .dropdown-menu {
+            z-index: 1060;
+        }
+    </style>
+}

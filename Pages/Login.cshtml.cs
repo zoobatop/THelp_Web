@@ -1,67 +1,121 @@
-using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using THelp_Web.Services;
 
 namespace THelp_Web.Pages
 {
     public class LoginModel : PageModel
     {
+        private readonly AuthService _authService;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(ILogger<LoginModel> logger)
+        [BindProperty]
+        public InputModel Input { get; set; }
+
+        public LoginModel(AuthService authService, ILogger<LoginModel> logger)
         {
+            _authService = authService;
             _logger = logger;
         }
 
-        [BindProperty]
-        public InputModel Input { get; set; } = new();
-
-        public string? ErrorMessage { get; set; }
-
         public class InputModel
         {
-            [Required(ErrorMessage = "O e-mail é obrigatório")]
-            [EmailAddress(ErrorMessage = "E-mail inválido")]
-            [Display(Name = "E-mail")]
+            [Required(ErrorMessage = "O e-mail Ã© obrigatÃ³rio")]
+            [EmailAddress(ErrorMessage = "Digite um e-mail vÃ¡lido")]
             public string Email { get; set; } = string.Empty;
 
-            [Required(ErrorMessage = "A senha é obrigatória")]
+            [Required(ErrorMessage = "A senha Ã© obrigatÃ³ria")]
             [DataType(DataType.Password)]
-            [Display(Name = "Senha")]
-            public string Password { get; set; } = string.Empty;
+            public string Senha { get; set; } = string.Empty;
 
-            [Display(Name = "Lembrar-me")]
             public bool RememberMe { get; set; }
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
-            // Se precisar limpar sessão/cookies de login, pode fazer aqui
+            if (_authService.IsAuthenticated())
+            {
+                return RedirectToPage("/Chamado/Index");
+            }
+            return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
-            {
                 return Page();
-            }
 
-            // TODO: Validar usuário em banco/serviço aqui
-            // Exemplo fictício:
-            if (Input.Email == "admin@teste.com" && Input.Password == "123456")
+            _logger.LogInformation("Tentativa de login para: {Email}", Input.Email);
+
+            // Usa o AuthService para fazer login na API
+            var apiResponse = await _authService.LoginAsync(Input.Email, Input.Senha);
+
+            if (apiResponse?.Success == true && apiResponse.Data?.Token != null)
             {
-                _logger.LogInformation("Usuário logado com sucesso: {Email}", Input.Email);
+                var loginData = apiResponse.Data;
+                var usuario = loginData.Usuario;
 
-                // Aqui você deveria criar o cookie de autenticação ou algo similar
-                // Por enquanto, só redireciono para o dashboard
-                return RedirectToPage("/Index");
+                _logger.LogInformation("Login bem-sucedido para: {Nome}", usuario?.Nome);
+
+                // Cria as claims do usuÃ¡rio
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, usuario?.Id.ToString() ?? "0"),
+                    new Claim(ClaimTypes.Name, usuario?.Nome ?? Input.Email),
+                    new Claim(ClaimTypes.Email, Input.Email),
+                    new Claim("PapelId", usuario?.IdPapel.ToString() ?? "0"),
+                    new Claim("OrganizacaoId", usuario?.IdOrganizacao.ToString() ?? "0"),
+                    new Claim("JwtToken", loginData.Token)
+                };
+
+                // Adiciona role baseada no papel
+                if (usuario?.IdPapel == 1)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+                }
+                else
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "Usuario"));
+                }
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = Input.RememberMe,
+                    ExpiresUtc = DateTimeOffset.FromUnixTimeMilliseconds(loginData.ExpiraEm),
+                    IssuedUtc = DateTimeOffset.UtcNow
+                };
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
+
+                TempData["SuccessMessage"] = "Login realizado com sucesso!";
+                return RedirectToPage("/Chamado/Index");
             }
 
-            ErrorMessage = "E-mail ou senha inválidos.";
-            _logger.LogWarning("Tentativa de login falhou: {Email}", Input.Email);
+            _logger.LogWarning("Login falhou para: {Email}", Input.Email);
+
+            // Tenta pegar a mensagem de erro da API
+            var errorMessage = apiResponse?.Message ?? "E-mail ou senha invÃ¡lidos.";
+            ModelState.AddModelError(string.Empty, errorMessage);
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnGetLogout()
+        {
+            _authService.Logout();
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            TempData["InfoMessage"] = "VocÃª foi desconectado com sucesso.";
+            return RedirectToPage("/Welcome");
         }
     }
 }

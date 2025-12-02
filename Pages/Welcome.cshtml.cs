@@ -1,20 +1,18 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 
 namespace THelp_Web.Pages
 {
     public class WelcomeModel : PageModel
     {
-        private readonly ILogger<WelcomeModel> _logger;
-
-        public WelcomeModel(ILogger<WelcomeModel> logger)
+        public IActionResult OnGet()
         {
-            _logger = logger;
-        }
-
-        public void OnGet()
-        {
-            _logger.LogInformation("Welcome page accessed.");
+            // Se o usuário já estiver autenticado, redireciona para a página de chamados
+            if (User.Identity.IsAuthenticated)
+            {
+                return RedirectToPage("/Chamado/Index");
+            }
+            return Page();
         }
     }
 }

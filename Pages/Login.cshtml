@@ -1,41 +1,50 @@
-﻿@page
+@page
 @model THelp_Web.Pages.LoginModel
-@{
-    Layout = "_AuthLayout";
-    ViewData["Title"] = "Login";
-}
 
-<h1 class="h4 mb-3 fw-bold text-center">Entrar</h1>
-
-<form method="post">
-    <div class="mb-3">
-        <label asp-for="Input.Email" class="form-label"></label>
-        <input asp-for="Input.Email" class="form-control" />
-        <span asp-validation-for="Input.Email" class="text-danger"></span>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="text-center mb-0">
+                    <i class="fas fa-sign-in-alt"></i> Entrar no Sistema
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="form-group mb-3">
+                        <label asp-for="Input.Email" class="form-label"></label>
+                        <input asp-for="Input.Email" class="form-control" placeholder="Digite seu e-mail" />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label asp-for="Input.Senha" class="form-label"></label>
+                        <input asp-for="Input.Senha" type="password" class="form-control" placeholder="Digite sua senha" />
+                        <span asp-validation-for="Input.Senha" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label">
+                            Lembrar de mim
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Entrar
+                        </button>
+                        <a asp-page="/Register" class="btn btn-outline-secondary">
+                            <i class="fas fa-user-plus"></i> Não tenho conta
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="Input.Password" class="form-label"></label>
-        <input asp-for="Input.Password" class="form-control" type="password" />
-        <span asp-validation-for="Input.Password" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3 form-check">
-        <input asp-for="Input.RememberMe" class="form-check-input" />
-        <label asp-for="Input.RememberMe" class="form-check-label"></label>
-    </div>
-
-    <div class="d-grid mb-3">
-        <button type="submit" class="btn btn-primary">Entrar</button>
-    </div>
-
-    <div class="text-center">
-        <small class="text-muted">
-            Não tem conta?
-            <a asp-page="/Register">Registrar-se</a>
-        </small>
-    </div>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

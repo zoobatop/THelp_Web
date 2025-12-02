@@ -1,0 +1,82 @@
+@page "{id?}"
+@model THelp_Web.Pages.Chamado.ChatModel
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">
+                            <i class="fas fa-comments"></i> Chamado #@Model.ChamadoId - @Model.ChamadoTitulo
+                        </h4>
+                        <small class="text-white-50">Status: 
+                            <span class="badge @Model.GetStatusBadgeClass(@Model.ChamadoStatus)">
+                                @Model.ChamadoStatus
+                            </span>
+                        </small>
+                    </div>
+                    <div>
+                        <a asp-page="Index" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Área de Mensagens -->
+                    <div id="chatMessages" class="mb-3" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px;">
+                        @if (Model.Mensagens != null)
+                        {
+                            foreach (var mensagem in Model.Mensagens)
+                            {
+                                <div class="@(mensagem.IsUsuarioAtual ? "text-end mb-3" : "text-start mb-3")">
+                                    <div class="d-inline-block p-3 rounded @(mensagem.IsUsuarioAtual ? "bg-primary text-white" : "bg-light")" 
+                                         style="max-width: 70%;">
+                                        <div class="fw-bold">@mensagem.Usuario</div>
+                                        <div>@mensagem.Texto</div>
+                                        <small class="@(mensagem.IsUsuarioAtual ? "text-white-50" : "text-muted")">
+                                            @mensagem.DataHora.ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                    
+                    <!-- Formulário de Nova Mensagem -->
+                    <form method="post" id="chatForm">
+                        <input type="hidden" asp-for="ChamadoId" />
+                        <div class="input-group">
+                            <textarea asp-for="NovaMensagem" class="form-control" 
+                                      placeholder="Digite sua mensagem..." 
+                                      rows="2"></textarea>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Enviar
+                            </button>
+                        </div>
+                        <span asp-validation-for="NovaMensagem" class="text-danger"></span>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Script para rolar automaticamente para a última mensagem
+        window.onload = function() {
+            var chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        // Limpar campo de texto após envio
+        document.getElementById('chatForm').onsubmit = function() {
+            setTimeout(function() {
+                document.getElementById('NovaMensagem').value = '';
+            }, 100);
+        };
+    </script>
+}

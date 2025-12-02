@@ -1,99 +1,86 @@
-﻿@using Microsoft.AspNetCore.Mvc.RazorPages
-@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="utf-8" />
-    <title>@ViewData["Title"] - THelp</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Thelp</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
-    <link rel="stylesheet" href="~/css/_Layout.css" /> @* vamos criar esse *@
-
-    @RenderSection("Styles", required: false)
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/THelp_Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 <body>
-    <header class="topbar navbar navbar-dark bg-primary">
-        <div class="container-fluid">
-            <button class="btn btn-outline-light d-md-none me-2" id="sidebarToggle">
-                ☰
-            </button>
-
-            <a class="navbar-brand fw-bold" asp-page="/Index">
-                THelp - Sistema de Chamados
-            </a>
-
-            <div class="d-flex align-items-center">
-                <span class="text-white me-3">
-                    @* Exemplo, depois você pode colocar o usuário logado *@
-                    Olá, Usuário
-                </span>
-                <a class="btn btn-outline-light btn-sm" asp-page="/Login">Sair</a>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-page="/Welcome">
+                    <i class="fas fa-headset"></i> Thelp
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Chamado/Index">
+                                    <i class="fas fa-ticket-alt"></i> Meus Chamados
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Chamado/Criar">
+                                    <i class="fas fa-plus-circle"></i> Novo Chamado
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link">Olá, @User.Identity.Name!</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Login" asp-page-handler="Logout">
+                                    <i class="fas fa-sign-out-alt"></i> Sair
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Login">
+                                    <i class="fas fa-sign-in-alt"></i> Entrar
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Register">
+                                    <i class="fas fa-user-plus"></i> Cadastrar
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
             </div>
-        </div>
+        </nav>
     </header>
 
-    <div class="app-container d-flex">
-        <nav id="sidebar" class="sidebar bg-dark text-white">
-            <div class="sidebar-header p-3 border-bottom border-secondary">
-                <h5 class="mb-0">Menu</h5>
-            </div>
-
-            <ul class="nav flex-column p-2">
-                <li class="nav-item">
-                    <a class="nav-link text-white" asp-page="/Index">
-                        🏠 Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" asp-page="/Welcome">
-                        👋 Tela de Boas-vindas
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" asp-page="/Test/Connection">
-                        🧪 Testar API
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" asp-page="/Usuario/Index">
-                        👥 Gerenciar Usuários
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" asp-page="/Organizacao/Index">
-                        🏢 Gerenciar Organizações
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" asp-page="/Papel/Index">
-                        🎭 Gerenciar Papéis
-                    </a>
-                </li>
-                @* Depois você adiciona outras páginas do sistema de chamados aqui *@
-                <li class="nav-item mt-3">
-                    <span class="text-secondary small px-3 text-uppercase">Chamados</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white-50 disabled" href="#">
-                        (exemplo) Meus Chamados
-                    </a>
-                </li>
-            </ul>
-        </nav>
-
-        <main class="main-content flex-grow-1">
-            <div class="container-fluid py-4">
-                @RenderBody()
-            </div>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
         </main>
     </div>
 
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - Trust Help - Sistema de Help Desk
+        </div>
+    </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js"></script>
-
-    @RenderSection("Scripts", required: false)
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
